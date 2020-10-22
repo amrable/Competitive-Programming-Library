@@ -6,7 +6,7 @@ class CoordinateVector;
 class Line;
 class Point {
     public:
-        const double EPS = 1e-9;
+        static const double EPS = 1e-9;
         double x, y;
 
         Point(double a ,double b);
@@ -15,7 +15,7 @@ class Point {
 
         double dist(Point p);
 
-        double sq(double x);
+        static double sq(double x);
 
         Point rotate(double angle);
 
@@ -37,18 +37,18 @@ class Point {
 
         // returns true if it is on the left side of Line pq
         // add EPS to LHS if on-line points are accepted
-        bool ccw(Point p, Point q, Point r);
+        static bool ccw(Point p, Point q, Point r);
 
-        bool collinear(Point p, Point q, Point r);
+        static bool collinear(Point p, Point q, Point r);
 
         // angle AOB 
-        double angle(Point a, Point o, Point b);
+        static double angle(Point a, Point o, Point b);
         
-        double distToLine(Point p, Point a, Point b); //distance between point p and a line defined by points a, b (a != b)
+        static double distToLine(Point p, Point a, Point b); //distance between point p and a line defined by points a, b (a != b)
             
         // Another way: find closest point and calculate the distance between it and p
 
-        double distToLineSegment(Point p, Point a, Point b);
+        static double distToLineSegment(Point p, Point a, Point b);
         // Another way: find closest point and calculate the distance between it and p
 
 };
@@ -76,7 +76,7 @@ class CoordinateVector{
 
 class Line{
     public:
-        const double INF = 1e9 , EPS = 1e-9;
+        static const double INF = 1e9 , EPS = 1e-9;
         double a, b, c;
 
         Line(Point p, Point q);
@@ -256,17 +256,7 @@ Point Line::closest_point(Point p)
     if(abs(a) < EPS) return Point(p.x, -c);
     return intersect(Line(p, 1 / a));
 }
-	
 
-
-	
 int main(){
-    // Point p1(1,0);
-    // Point p2 = p1.rotate(-3.14/2);
-    // cout<<p1.x<<" "<<p1.y<<endl;
-    // cout<<p2.x<<" "<<p2.y<<endl;
-    // CoordinateVector cv(1 , 1);
-    // CoordinateVector cv2 = cv.scale(3);
-    // cout<<cv.x<<" "<<cv.y<<endl;
-    // cout<<cv2.x<<" "<<cv2.y;
+    
 }
