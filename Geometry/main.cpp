@@ -9,7 +9,8 @@ class Polygon;
 class Rectangle;
 class LineSegment;
 class Triangle;
-
+class Circle;
+class Geometry;
 class Point {
     public:
         static const double EPS = 1e-9;
@@ -145,35 +146,60 @@ class LineSegment {
 
 
 class Triangle {
+    public:
+        static const double EPS = 1e-9;
+        
+        Point a, b, c;
+        double ab, bc, ca;
 
-	static const double EPS = 1e-9;
-	
-	Point a, b, c;
-	double ab, bc, ca;
+        Triangle(Point p, Point q, Point r);
 
-	Triangle(Point p, Point q, Point r);
+        double perm();
 
-	double perm();
+        double area();
 
-	double area();
+        double area2() ;
 
-	double area2() ;
+        double area3();
+        double rInCircle();
 
-	double area3();
-    double rInCircle();
+        Point inCenter();
 
-	Point inCenter();
+        double rCircumCircle();
 
-	double rCircumCircle();
+        Point circumCircle() ;
 
-	Point circumCircle() ;
+        static double areaMedians(double ma, double mb, double mc);
 
-	static double areaMedians(double ma, double mb, double mc);
-
-	static double areaHeights(double ha, double hb, double hc);
+        static double areaHeights(double ha, double hb, double hc);
 };
 
+class Circle { 	//equation: (x-c.x)^2 + (y-c.y)^2 = r^2
+    public:
+        static const double EPS = 1e-9;
+        Point c;
+        double r;
+        Circle(Point p, double k);
+        int inside(Point p)	;
+        double circum()	;
+        double area();
+        double arcLength(double deg);
+        double chordLength(double deg);
+        double sectorArea(double deg) ;
+        double segmentArea(double deg);
+        bool intersect(Circle cir);
+        bool intersect(Point p, Point q);
+        static Point findCenter(Point p, Point q, double r)	;
+};
 
+class Geometry{
+    public:
+        static const double INF = 1e9, EPS = 1e-9;		// better use 1e-11 for large coordinates and 1e-15 if infinite precision is required
+        static double degToRad(double d) ;
+        static double radToDeg(double r);
+        static double round(double x) ;
+        static double vTetra(vector<double> sides);
+};
 
 Point::Point(double a ,double b){
     x = a; 
@@ -573,31 +599,95 @@ double Triangle::areaHeights(double ha, double hb, double hc)		//heights of the 
     double s = (ha_1 + hb_1 + hc_1) / 2.0;
     return 1.0 / (sqrt(s * (s - ha_1) * (s - hb_1) * (s - hc_1)) * 4.0);
 }
-class Geometry {
 
-	static const double INF = 1e9, EPS = 1e-9;		// better use 1e-11 for large coordinates and 1e-15 if infinite precision is required
-	
-	static double degToRad(double d) { return d * PI / 180.0; }
+Circle::Circle(Point p, double k) { c = p; r = k; }
 
-	static double radToDeg(double r) { return r * 180.0 / PI; }
-	
-	static double round(double x) {	return round(x * 1000) / 1000.0; }  //use it because of -0.000
-	
-	//Volume of Tetrahedron WXYZ, sides order: WX, WY, WZ, XY, XZ, YZ
-	static double vTetra(vector<double> sides)
-	{
-		vector<double> coff(3);
-		for(int i = 0; i < 3; i++)
-			coff[i] = sides[(i+1)%3] * sides[(i+1)%3] + sides[(i+2)%3] * sides[(i+2)%3] - sides[5 - i] * sides[5 - i];
+int Circle::inside(Point p)	//1 for inside, 0 for border, -1 for outside
+{
+    double d = p.dist(c);
 
-		double root = 4 * sides[0] * sides[0] * sides[1] * sides[1] * sides[2] * sides[2];
-		for(int i = 0; i < 3; i++)
-			root -= coff[i] * coff[i] * sides[i] * sides[i];
-		root += coff[0] * coff[1] * coff[2];
+    return d + EPS < r ? 1 : abs(d - r) < EPS ? 0 : -1;
+}
 
-		return 1 / 12.0 * sqrt(root);
-	}
-};
+double Circle::circum()	{ return 2 * PI * r; }
+
+double Circle::area() { return PI * r * r; }
+
+double Circle::arcLength(double deg) { return deg / 360.0 * circum(); }		//major and minor chords exist
+
+double Circle::chordLength(double deg)
+{ 
+    return 2 * r * sin(Geometry::degToRad(deg) / 2.0); 
+}
+
+double Circle::sectorArea(double deg) { return deg / 360.0 * area(); }
+
+double Circle::segmentArea(double deg)
+{
+    return sectorArea(deg) - r * r * sin(Geometry::degToRad(deg)) / 2.0;
+}
+
+bool Circle::intersect(Circle cir)
+{
+    return c.dist(cir.c) <= r + cir.r + EPS && c.dist(cir.c) + EPS >= abs(r - cir.r);
+}
+//returns true if the circle intersects with the line segment defined by p and q at one or two points
+bool Circle::intersect(Point p, Point q)
+{
+    Line l(p, q);
+    if(abs(l.b) < EPS)
+    {
+        if(l.c * l.c > r * r + EPS)
+            return false;
+
+        double y1 = sqrt(abs(r * r - l.c * l.c)), y2 = -y1;
+        return  Point(-l.c, y1).between(p, q) && Point(-l.c, y2).between(p, q);
+    }
+    double a = l.a * l.a + 1, b = 2 * l.a * l.c, c = l.c * l.c - r * r;
+    if(b * b - 4 * a * c + EPS < 0)
+        return false;
+
+    double dis = b * b - 4 * a * c;
+
+    double x1 = (-b + sqrt(dis)) / (2.0 * a), x2 = (-b - sqrt(dis)) / (2.0 * a);
+
+    return Point(x1, - l.a * x1 - l.c).between(p, q) || Point(x2, - l.a * x2 - l.c).between(p, q);
+}
+
+Point Circle::findCenter(Point p, Point q, double r)		//for the other center, swap p and q
+{
+    double d2 = (p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y);
+    double det = r * r / d2 - 0.25;
+    if(abs(det) < EPS)
+        det = 0.0;
+
+    //THI SHOULD BE DONE IN MAIN
+    // if(det < 0.0)
+    // 	return NULL;
+    double h = sqrt(det);
+    return Point((p.x + q.x) / 2.0 + (p.y - q.y) * h, (p.y + q.y) / 2.0 + (q.x - p.x) * h);
+}
+
+double Geometry::degToRad(double d) { return d * PI / 180.0; }
+
+double Geometry::radToDeg(double r) { return r * 180.0 / PI; }
+
+double Geometry::round(double x) {	return round(x * 1000) / 1000.0; }  //use it because of -0.000
+
+//Volume of Tetrahedron WXYZ, sides order: WX, WY, WZ, XY, XZ, YZ
+double Geometry::vTetra(vector<double> sides)
+{
+    vector<double> coff(3);
+    for(int i = 0; i < 3; i++)
+        coff[i] = sides[(i+1)%3] * sides[(i+1)%3] + sides[(i+2)%3] * sides[(i+2)%3] - sides[5 - i] * sides[5 - i];
+
+    double root = 4 * sides[0] * sides[0] * sides[1] * sides[1] * sides[2] * sides[2];
+    for(int i = 0; i < 3; i++)
+        root -= coff[i] * coff[i] * sides[i] * sides[i];
+    root += coff[0] * coff[1] * coff[2];
+
+    return 1 / 12.0 * sqrt(root);
+}
 
 int main(){
     vector<Point>v(5);
