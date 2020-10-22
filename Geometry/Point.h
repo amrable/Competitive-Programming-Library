@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+// #include "Vector.h"
 
 using namespace std;
 
@@ -40,8 +41,3 @@ class Point {
         }
 
 };
-int main(){
-    Point p1(1,0);
-    Point p2 = p1.rotate(-3.14/2);
-    cout<<p2.x<<" "<<p2.y<<endl;
-}

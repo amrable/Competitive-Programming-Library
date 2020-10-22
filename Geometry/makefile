@@ -1,4 +1,4 @@
-hellomake: point.cpp
+hellomake: main.cpp
 	-std=c++17
-	g++ -o sol point.cpp
+	g++ -o sol main.cpp
 	./sol
