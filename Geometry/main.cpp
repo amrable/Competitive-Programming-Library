@@ -6,6 +6,7 @@ class Point;
 class CoordinateVector;
 class Line;
 class Polygon;
+class Rectangle;
 
 class Point {
     public:
@@ -117,6 +118,24 @@ class Polygon{
     static Polygon convexHull(vector<Point> points);
     Point centroid();
 };
+
+class Rectangle {
+
+	static const double EPS = 1e-9;
+	
+	Point ll, ur;
+
+	Rectangle(Point a, Point b);
+
+	double area();
+    
+	bool contains(Point p);
+
+	Rectangle intersect(Rectangle r);
+
+};
+
+
 Point::Point(double a ,double b){
     x = a; 
     y = b;
@@ -399,6 +418,26 @@ Point Polygon::centroid(){		//center of mass
     cx /= 6.0 * area;
     cy /= 6.0 * area;
     return Point(cx, cy);
+}
+
+
+
+Rectangle::Rectangle(Point a, Point b) { ll = a; ur = b; }
+
+double Rectangle::area() { return (ur.x - ll.x) * (ur.y - ll.y); }
+
+bool Rectangle::contains(Point p){
+    return p.x <= ur.x + EPS && p.x + EPS >= ll.x && p.y <= ur.y + EPS && p.y + EPS >= ll.y;
+}
+
+Rectangle Rectangle::intersect(Rectangle r){
+    Point ll(max(this->ll.x, r.ll.x), max(this->ll.y, r.ll.y));
+    Point ur(min(this->ur.x, r.ur.x), min(this->ur.y, r.ur.y));
+    if(abs(ur.x - ll.x) > EPS && abs(ur.y - ll.y) > EPS && this->contains(ll) && this->contains(ur) && r.contains(ll) && r.contains(ur))
+        return Rectangle(ll, ur);
+    // THIS SHOULD BE RETURN NULL !! TAKE THIS FUNCTION TO YOUR MAIN
+    // return NULL;
+    return Rectangle(ll, ur);;
 }
 
 int main(){
