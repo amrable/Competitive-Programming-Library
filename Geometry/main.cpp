@@ -1,15 +1,19 @@
 #include <bits/stdc++.h>
+#define PI 3.141592653589793238
 
 using namespace std;
 class Point;
 class CoordinateVector;
 class Line;
+class Polygon;
+
 class Point {
     public:
         static const double EPS = 1e-9;
         double x, y;
 
         Point(double a ,double b);
+        Point();
 
         int compareTo(Point p);
 
@@ -51,6 +55,10 @@ class Point {
         static double distToLineSegment(Point p, Point a, Point b);
         // Another way: find closest point and calculate the distance between it and p
 
+        //comparator
+        static bool comp(Point& a , Point&b){
+            return a.compareTo(b)<1;
+        }
 };
 
 class CoordinateVector{
@@ -92,9 +100,30 @@ class Line{
         Point closest_point(Point p);
 };
 
+class Polygon{
+    // Cases to handle: collinear points, polygons with n < 3
+
+	static const double EPS = 1e-9;
+	
+	vector<Point> g; 			//first point = last point, counter-clockwise representation
+	
+	Polygon( vector<Point> o);
+
+    double perimeter();
+    double area();
+    bool isConvex();
+    bool inside(Point p);
+    Polygon cutPolygon(Point a, Point b);
+    static Polygon convexHull(vector<Point> points);
+    Point centroid();
+};
 Point::Point(double a ,double b){
     x = a; 
     y = b;
+}
+Point::Point(){
+    x = 0; 
+    y = 0;
 }
 
 int Point::compareTo(Point p){
@@ -257,6 +286,131 @@ Point Line::closest_point(Point p)
     return intersect(Line(p, 1 / a));
 }
 
-int main(){
+Polygon::Polygon( vector<Point> o) { g = o; }
+
+double Polygon::perimeter() {
+    double sum = 0.0;
+    for(int i = 0; i < g.size() - 1; ++i)
+        sum += g[i].dist(g[i+1]);
+    return sum;
+}
+double Polygon::area(){ 		//clockwise/anti-clockwise check, for convex/concave polygons
+    double ar = 0.0;
+    for(int i = 0; i < g.size() - 1; ++i)
+        ar += g[i].x * g[i+1].y - g[i].y * g[i+1].x;
+    return abs(ar) / 2.0;			//negative value in case of clockwise
+}
+bool Polygon::isConvex(){
+    if(g.size() <= 3) // point or line
+        return false;
+    bool ccw = Point::ccw(g[g.size() - 2], g[0], g[1]);		//edit ccw check to accept collinear points
+    for(int i = 1; i < g.size() - 1; ++i)
+        if(Point::ccw(g[i-1], g[i], g[i+1]) != ccw)
+            return false;
+    return true;
+}
+bool Polygon::inside(Point p){	//for convex/concave polygons - winding number algorithm 
+    double sum = 0.0;
+    for(int i = 0; i < g.size() - 1; ++i)
+    {
+        double angle = Point::angle(g[i], p, g[i+1]);
+        if((abs(angle) < EPS || abs(angle - PI) < EPS) && p.between(g[i], g[i+1]))
+            return true;
+        if(Point::ccw(p, g[i], g[i+1]))
+            sum += angle;
+        else
+            sum -= angle;
+    }
+
+    return abs(2 * PI - abs(sum)) < EPS;		//abs makes it work for clockwise
+}
+/*
+    * Another way if the polygon is convex
+    * 1. Triangulate the poylgon through p
+    * 2. Check if sum areas == poygon area
+    * 3. Handle empty polygon
+    */
+Polygon Polygon::cutPolygon(Point a, Point b)	//returns the left part of the polygon, swap a & b for the right part
+{
+    vector<Point> ans((g.size()<<1)) ;
+    Line l(a, b);
+    CoordinateVector v(a, b);
     
+    int size = 0;
+    for(int i = 0; i < g.size(); ++i){
+        double left1 = v.cross(CoordinateVector(a, g[i]));
+        double left2 = i == g.size() - 1 ? 0 : v.cross( CoordinateVector(a, g[i+1]));
+
+        if(left1 + EPS > 0)	
+            ans[size++] = g[i];
+        if(left1 * left2 + EPS < 0)
+            ans[size++] = l.intersect(Line(g[i], g[i+1]));
+    }
+    
+    if(size != 0 && ans[0].x != ans[size-1].x &&ans[0].y != ans[size-1].y )	//necessary in case g[0] is not in the new polygon
+        ans[size++] = ans[0];
+    
+    vector<Point> ret;
+    for(int i = 0 ; i<size;i++){
+        ret.push_back(ans[i]);
+    }
+    return Polygon(ret);
+}
+
+Polygon Polygon::convexHull(vector<Point> points){	//all points are unique, remove duplicates, edit ccw to accept collinear points
+    int n = points.size();
+    sort(points.begin(),points.end() , Point::comp);
+    vector<Point> ans((n<<1)) ;
+    int size = 0, start = 0;
+
+    for(int i = 0; i < n; i++){
+        Point p = points[i];
+        while(size - start >= 2 && !Point::ccw(ans[size-2], ans[size-1], p))	--size;
+        ans[size++] = p;
+    }
+    start = --size;
+
+    for(int i = n-1 ; i >= 0 ; i--)
+    {
+        Point p = points[i];
+        while(size - start >= 2 && !Point::ccw(ans[size-2], ans[size-1], p))	--size;
+        ans[size++] = p; 
+    }
+    //			if(size < 0) size = 0			for empty set of points
+    vector<Point> ret;
+    for(int i = 0 ; i<size;i++){
+        ret.push_back(ans[i]);
+    }
+    return Polygon(ret);
+    // return new Polygon(Arrays.copyOf(ans, size));			
+}
+Point Polygon::centroid(){		//center of mass
+    double cx = 0.0, cy = 0.0;
+    for(int i = 0; i < g.size() - 1; i++)
+    {
+        double x1 = g[i].x, y1 = g[i].y;
+        double x2 = g[i+1].x, y2 = g[i+1].y;
+
+        double f = x1 * y2 - x2 * y1;
+        cx += (x1 + x2) * f;
+        cy += (y1 + y2) * f;
+    }
+    double area = this->area();		//remove abs
+    cx /= 6.0 * area;
+    cy /= 6.0 * area;
+    return Point(cx, cy);
+}
+
+int main(){
+    vector<Point>v(5);
+    v[0].x = 0, v[0].y = 5; 
+    v[1].x = 3, v[1].y = 4; 
+    v[2].x = 3, v[2].y = 3; 
+    v[3].x = 2, v[3].y = 2; 
+    v[4].x = 3, v[4].y = 5; 
+    sort(v.begin(),v.end() , Point::comp);
+    
+    for(int i = 0 ; i< 5 ; i++){
+        cout<<v[i].x<<" "<<v[i].y<<endl;
+    }
 }
