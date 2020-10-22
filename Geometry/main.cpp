@@ -460,6 +460,32 @@ bool LineSegment::intersect(LineSegment ls){
     return c.between(p, q) && c.between(ls.p, ls.q);
 }
 
+class Geometry {
+
+	static const double INF = 1e9, EPS = 1e-9;		// better use 1e-11 for large coordinates and 1e-15 if infinite precision is required
+	
+	static double degToRad(double d) { return d * PI / 180.0; }
+
+	static double radToDeg(double r) { return r * 180.0 / PI; }
+	
+	static double round(double x) {	return round(x * 1000) / 1000.0; }  //use it because of -0.000
+	
+	//Volume of Tetrahedron WXYZ, sides order: WX, WY, WZ, XY, XZ, YZ
+	static double vTetra(vector<double> sides)
+	{
+		vector<double> coff(3);
+		for(int i = 0; i < 3; i++)
+			coff[i] = sides[(i+1)%3] * sides[(i+1)%3] + sides[(i+2)%3] * sides[(i+2)%3] - sides[5 - i] * sides[5 - i];
+
+		double root = 4 * sides[0] * sides[0] * sides[1] * sides[1] * sides[2] * sides[2];
+		for(int i = 0; i < 3; i++)
+			root -= coff[i] * coff[i] * sides[i] * sides[i];
+		root += coff[0] * coff[1] * coff[2];
+
+		return 1 / 12.0 * sqrt(root);
+	}
+};
+
 int main(){
     vector<Point>v(5);
     v[0].x = 0, v[0].y = 5; 
