@@ -7,6 +7,7 @@ class CoordinateVector;
 class Line;
 class Polygon;
 class Rectangle;
+class LineSegment;
 
 class Point {
     public:
@@ -134,7 +135,11 @@ class Rectangle {
 	Rectangle intersect(Rectangle r);
 
 };
-
+class LineSegment {
+	Point p, q;
+	LineSegment(Point a, Point b);
+	bool intersect(LineSegment ls);
+};
 
 Point::Point(double a ,double b){
     x = a; 
@@ -438,6 +443,21 @@ Rectangle Rectangle::intersect(Rectangle r){
     // THIS SHOULD BE RETURN NULL !! TAKE THIS FUNCTION TO YOUR MAIN
     // return NULL;
     return Rectangle(ll, ur);;
+}
+	
+LineSegment::LineSegment(Point a, Point b) { p = a; q = b; }
+	
+
+bool LineSegment::intersect(LineSegment ls){
+    Line l1(p, q);
+    Line l2(ls.p, ls.q);
+    if(l1.parallel(l2)){
+        if(l1.same(l2))
+            return p.between(ls.p, ls.q) || q.between(ls.p, ls.q) || ls.p.between(p, q) || ls.q.between(p, q);
+        return false;
+    }
+    Point c = l1.intersect(l2);
+    return c.between(p, q) && c.between(ls.p, ls.q);
 }
 
 int main(){
