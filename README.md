@@ -27,4 +27,4 @@ Feel free to copy, add, update anything.
 - Ternary search
 - Sieve
 - Pascal
-
+- Spare table
