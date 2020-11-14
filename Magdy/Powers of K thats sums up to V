@@ -1,0 +1,21 @@
+vector<int> br(ll v, ll k) // return indices "powers of k" which sums up to v { br(22,2) return -> {4,2,1} -> {16+4+2} }
+{
+    ll i=1;
+    int count=0;
+    vector<int> ind;
+    while(v)
+    {
+        while(i*k<=v)
+        {
+            i*=k;
+            ++count;
+        }
+        ind.push_back(count);
+        count=0;
+        if(i==1)
+            break;
+        v-=i;
+        i=1;
+    }
+    return ind;
+}
