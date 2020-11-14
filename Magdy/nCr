@@ -1,0 +1,42 @@
+#define pi 3.14159265358979323846264338327950
+ll gcd(ll a, ll b)
+{
+  return (!b ? a : gcd(b, a % b));
+}
+ll lcm(ll a, ll b)
+{
+  return a * b / gcd(a, b);
+}
+int pc(ll x)
+{
+  return __builtin_popcount(x);
+}
+ll pow(ll a, ll k, ll m)
+{
+  if (!k)
+    return 1;
+  ll res = pow(a, k >> 1, m);
+  res = (res * res) % m;
+  if (k & 1)
+    res = (res * a) % m;
+  return res % m;
+}
+ll fact(ll n, ll m)
+{
+  ll res = 1;
+  for (int i = 2; i <= n; ++i)
+    res *= i, res %= m;
+  return res;
+}
+// mod m - m is prime
+ll modMulInv(ll a, ll m)
+{
+  return pow(a, m - 2, m);
+}
+// mod m
+ll nCr(ll n, ll r, ll m)
+{
+	if(n<r)
+		return 0;
+  return (fact(n, m) * modMulInv((fact(n - r, m) * fact(r, m)) % m, MOD)) % m; // if n can be large and called multiple times, preprocess fact array
+}
