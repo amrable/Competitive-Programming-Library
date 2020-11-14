@@ -1,0 +1,41 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+double dp[25][25][25];
+bool isPrime(int x)
+{
+  if (x < 2)
+    return false;
+  for (int i = 2; i < x; ++i)
+    if (x % i == 0)
+      return false;
+  return true;
+}
+
+double solve(int i, int g1, int g2, double skillOfTeamA, double skillOfTeamB)
+{
+  if (fabs(dp[i][g1][g2]+1)>1e-9) // to check if it's not -1
+    return dp[i][g1][g2];
+  if (i == 19)
+  {
+    if (isPrime(g1) || isPrime(g2))
+      return 1;
+    return 0;
+  }
+  double res = 0;
+  res += (1 - skillOfTeamA) * (1 - skillOfTeamB) * solve(i + 1, g1, g2, skillOfTeamA, skillOfTeamB);
+  res += (skillOfTeamA) * (1 - skillOfTeamB) * solve(i + 1, g1 + 1, g2, skillOfTeamA, skillOfTeamB);
+  res += (1 - skillOfTeamA) * (skillOfTeamB)*solve(i + 1, g1, g2 + 1, skillOfTeamA, skillOfTeamB);
+  res += skillOfTeamA * skillOfTeamB * solve(i + 1, g1 + 1, g2 + 1, skillOfTeamA, skillOfTeamB);
+  return dp[i][g1][g2] = res;
+}
+
+class PrimeSoccer
+{
+public:
+  double getProbability(int skillOfTeamA, int skillOfTeamB)
+  {
+    memset(dp,-1,sizeof(dp));
+    return solve(1, 0, 0, (double)skillOfTeamA / 100, (double)skillOfTeamB / 100);
+  }
+};
