@@ -1,0 +1,123 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define fn(x) return cout << x << endl, 0
+#define prs(x) cout << x << " "
+#define prl(x) cout << x << endl
+#define pr(x) cout << x
+#define pi 3.14159265358979323846264338327950
+
+typedef long long ll;
+ll MOD = (ll)1000000007;
+const int con = (int)2e6;
+ll cenPaths;
+vector<vector<int>> Graph;
+vector<int> sz, vec, cnt(con);
+vector<ll> ans;
+vector<bool> visited, centroidMarked;
+string tag;
+
+int dfs1(int v, int depth, int parent)
+{
+    int curr = 1;
+    visited[v] = true;
+    for (auto vv : Graph[v])
+        if (!visited[vv])
+            curr += dfs1(vv, depth + 1, v);
+    return sz[v] = curr;
+}
+
+int dfs2(int v, int parent, int mask)
+{
+    mask ^= (1 << (tag[v - 1] - 'a'));
+    ++cnt[mask];
+    int curr = 1;
+    for (auto vv : Graph[v])
+        if (!centroidMarked[vv] && vv != parent)
+            curr += dfs2(vv, v, mask);
+    return sz[v] = curr;
+}
+
+int getCentroid(int v, int parent, int subTreeSize)
+{
+    for (auto vv : Graph[v])
+        if (!centroidMarked[vv] && vv != parent && sz[vv] > subTreeSize / 2)
+            return getCentroid(vv, v, subTreeSize);
+    return v;
+}
+
+void add(int v, int parent, int sign, int mask)
+{
+    mask ^= (1 << (tag[v - 1] - 'a'));
+    cnt[mask] += sign;
+    for (auto vv : Graph[v])
+        if (!centroidMarked[vv] && vv != parent)
+            add(vv, v, sign, mask);
+}
+
+ll solve(int v, int parent, int mask)
+{
+    ll currPaths = 0;
+    mask ^= (1 << (tag[v - 1] - 'a'));
+    currPaths += cnt[mask];
+    int bits = __builtin_popcount(mask);
+    for (int i = 0; i < 20; ++i)
+        currPaths += cnt[mask ^ (1 << i)]; // currPaths gets all the paths from current node through current centroid
+    cenPaths += currPaths;
+    if (bits < 2)
+        ++currPaths, cenPaths += 2;
+    for (auto vv : Graph[v])
+        if (!centroidMarked[vv] && vv != parent)
+            currPaths += solve(vv, v, mask); // adding paths from every parent because if a path reaches a parent, it passes through
+    ans[v] += currPaths; // currPaths is the number of paths "passing through current centroid" that pass through vertex v
+    return currPaths;
+}
+
+void decompose(int v, int n, int subTreeSize)
+{
+    int centroid = getCentroid(v, -1, subTreeSize), i = vec.size();
+    centroidMarked[centroid] = true;
+    cenPaths = 0;
+    for (auto vv : Graph[centroid])
+        if (!centroidMarked[vv])
+        {
+            int newSubTreeSize = dfs2(vv, centroid, 0);
+            vec.push_back(newSubTreeSize);
+        }
+    for (auto vv : Graph[centroid])
+        if (!centroidMarked[vv])
+        {
+            add(vv, centroid, -1, 0);
+            solve(vv, centroid, 1 << (tag[centroid - 1] - 'a'));
+            add(vv, centroid, 1, 0);
+        }
+    for (auto vv : Graph[centroid])
+        if (!centroidMarked[vv])
+            add(vv, centroid, -1, 0);
+    ans[centroid] += (cenPaths >> 1);
+    for (auto vv : Graph[centroid])
+        if (!centroidMarked[vv])
+            decompose(vv, n, vec[i++]);
+}
+
+int main()
+{
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n, u, v;
+    cin >> n;
+    Graph.resize(n + 5), sz.resize(n + 5), visited.resize(n + 5), centroidMarked.resize(n + 5), ans.resize(n + 5);
+    for (int i = 0; i < n - 1; ++i)
+    {
+        cin >> u >> v;
+        Graph[u].push_back(v);
+        Graph[v].push_back(u);
+    }
+    cin >> tag;
+    dfs1(1, 0, 0);
+    decompose(1, n, n);
+    for (int i = 1; i <= n; ++i)
+        cout << ans[i] + 1 << " ";
+}
