@@ -1,0 +1,39 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+// check all possible mods at every index till reaching the last .. if we can get mod 0 then we can get sum that is div by k - we can take every number or its negation
+
+int mod(int num, int n)
+{
+    if (num >= 0)
+        return num % n;
+    num *= -1;
+    num %= n;
+    return (num ? n - num : num);
+}
+
+int main() {
+    int M,n,k;
+    cin >> M;
+    while (M--) {
+        cin >> n >> k;
+        vector<int> vec(n);
+        for(int i=0 ; i<n ; ++i)
+            cin >> vec[i];
+        vector <vector<bool>> dp(n, vector<bool>(k));
+        dp[0][mod(vec[0], k)] = true;
+        for (int i = 1; i < n; ++i)
+            for (int j = 0; j < k; ++j) {
+                int fmod = mod(vec[i], k);
+                int smod = mod(-vec[i], k);
+                int fcheck = j - fmod;
+                int scheck = j - smod;
+                if (j <= fmod)
+                    fcheck = (k - fmod + j) % k;
+                if (j <= smod)
+                    scheck = (k - smod + j) % k;
+                dp[i][j] = (dp[i - 1][fcheck] | dp[i - 1][scheck]);
+            }
+        cout << (dp[n - 1][0] ? "Divisible" : "Not divisible") << '\n';
+    }
+}
