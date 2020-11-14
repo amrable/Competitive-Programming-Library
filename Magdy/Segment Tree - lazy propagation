@@ -1,0 +1,65 @@
+
+typedef long long ll;
+const int N = 200009;
+vector<ll> segmentTree(4*N), lazy(4*N), vec(N);
+
+void construct(int index, int i, int j)
+{
+    if (j-i+1==1)
+    {
+        segmentTree[index] = vec[i];
+        return;
+    }
+    int mid = (i+j)/2;
+    construct(child1, i, mid);
+    construct(child2, mid+1, j);
+    segmentTree[index] = min(segmentTree[child1], segmentTree[child2]);
+}
+
+void lazyProp(int index, int i, int j)
+{
+    if (lazy[index])
+    {
+        segmentTree[index]+=lazy[index];
+        if (i!=j)
+        {
+            lazy[child1]+=lazy[index];
+            lazy[child2]+=lazy[index];
+        }
+        lazy[index]=0;
+    }
+}
+
+void update(int index, int i, int j, int l, int r, ll newVal)
+{
+    lazyProp(index, i, j);
+    if (r<i || l>j)
+        return;
+    if (i>=l && j<=r)
+    {
+        segmentTree[index]+=newVal;
+        if (i!=j)
+        {
+            lazy[child1]+=newVal;
+            lazy[child2]+=newVal;
+        }
+        return;
+    }
+    int mid = (i+j)/2;
+    update(child1, i, mid, l, r, newVal);
+    update(child2, mid+1, j, l, r, newVal);
+    segmentTree[index]=min(segmentTree[child1],segmentTree[child2]);
+}
+
+ll query(int index, int i, int j, int l, int r)
+{
+    lazyProp(index, i, j);
+    if (r<i || l>j)
+        return LONG_LONG_MAX;
+    if (i>=l && j<=r)
+        return segmentTree[index];
+    int mid = (i+j)/2;
+    ll r1=query(child1, i, mid, l, r);
+    ll r2=query(child2, mid+1, j, l, r);
+    return min(r1, r2);
+}
