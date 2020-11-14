@@ -1,0 +1,69 @@
+// nodes from 1 to n
+// v -> root , depth -> 0 , *** parent -> 0 ***
+// preprocessing height & par vectors.
+void dfs(int v, int depth, int parent, vector<vector<int>> &Graph, vector<int> &par, vector<int> &height, vector<bool> &visited)
+{
+  visited[v] = true;
+  par[v] = parent;
+  height[v] = depth;
+  for (auto vv : Graph[v])
+    if (!visited[vv])
+      dfs(vv, depth + 1, v, Graph, par, height, visited);
+}
+ 
+void preUp(int n, int l, vector<vector<int>> &Graph, vector<int> &par, vector<vector<int>> &up)
+{
+  for (int i = 1; i <= n; ++i)
+    up[i][0] = par[i]; // ancestor up at distance 1 is the parent
+  for (int j = 1; j <= l; ++j)
+    for (int i = 1; i <= n; ++i)
+      if (up[i][j - 1])                     // if half the jump is valid
+        up[i][j] = up[up[i][j - 1]][j - 1]; // this jump = half the jump from the node that is half the jump from this node
+}
+ 
+int LCA(int x, int y, int l, vector<vector<int>> &up, vector<int> &height)
+{
+  // height of x is greater than or equal the height of y
+  if (height[y] > height[x]) // if the opposite, swap them to make them as wanted
+    swap(x, y);
+  for (int j = l; j >= 0; --j) // jumping from x to get the node at the same height as y
+    if (up[x][j] && height[up[x][j]] >= height[y])
+      x = up[x][j];
+  if (x == y) // if one of them is the LCA , return it
+    return x;
+  for (int j = l; j >= 0; --j) // jumping all valid jumps to reach exactly the first node below the LCA in each branch
+    if (up[x][j] != up[y][j])
+    {
+      x = up[x][j];
+      y = up[y][j];
+    }
+  return up[x][0]; // the ancestor up at distance 1 from x (which is now the first node in the first branch) or y (which is now the first node in the second branch) is the LCA
+}
+ 
+void solve()
+{
+  int n, m, u, v;
+  cin >> n;
+  m = n - 1;
+  int mul = 2, l = 1;
+  while (mul * 2 < n)
+    mul *= 2, ++l;
+  ++l;
+  vector<vector<int>> Graph(n + 1), up(n + 1, vector<int>(l + 1));
+  vector<bool> visited(n + 1);
+  vector<int> par(n + 1), height(n + 1);
+  while (m--)
+  {
+    cin >> u >> v;
+    Graph[u].push_back(v);
+    Graph[v].push_back(u);
+  }
+  cin >> k;
+  dfs(1, 0, 0, Graph, par, height, visited); // assuming node 1 is the root
+  preUp(n, l, Graph, par, up);
+  while (k--)
+  {
+    cin >> u >> v;
+    int lca = LCA(u, v, l, up, height);
+  }
+}
