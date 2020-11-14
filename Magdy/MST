@@ -1,0 +1,39 @@
+int find_parent(int v, vector<int> &Subsets)
+{
+    if(Subsets[v]==v)
+        return v;
+    return Subsets[v] = find_parent(Subsets[v],Subsets);
+}
+
+bool make_union(int v1, int v2, vector<int> &Subsets)
+{
+    int a = find_parent(v1,Subsets);
+    int b = find_parent(v2,Subsets);
+    if(a==b)
+        return true;
+    Subsets[a]=b;
+    return false;
+}
+
+bool cmp(pair<pair<int,int>,long long> p1, pair<pair<int,int>,long long> p2)
+{
+    return p1.second<p2.second;
+}
+void generateMST(vector<int> &powerStations,vector<pair<int,int>> &Connections,vector<pair<pair<int,int>,long long>> &Edges,int n, long long &tc)
+{
+    vector<int> Subsets(n);
+    for(int i=0 ; i<n  ; ++i)
+        Subsets[i]=i;
+    sort(Edges.begin(),Edges.end(),cmp);
+    for(int i=0 ; i<Edges.size(); ++i)
+    {
+        if(!make_union(Edges[i].first.first,Edges[i].first.second,Subsets))
+        {
+            if(!Edges[i].first.first)
+                powerStations.push_back(Edges[i].first.second);
+            else
+                Connections.push_back({Edges[i].first.first,Edges[i].first.second});
+            tc+= Edges[i].second;
+        }
+    }
+}
