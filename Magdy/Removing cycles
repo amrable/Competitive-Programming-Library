@@ -1,0 +1,98 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define fn(x) return cout << x << endl, 0
+#define prs(x) cout << x << " "
+#define prl(x) cout << x << endl
+#define pr(x) cout << x
+#define pi 3.14159265358979323846264338327950
+
+typedef long long ll;
+ll MOD = (ll)1000000007;
+
+vector<vector<int>> Graph, nGraph;
+vector<int> dfsnum, lowlink, key;
+vector<bool> visited;
+stack<int> s;
+int cnt, keyy;
+
+void tarjan(int v, int par)
+{
+  dfsnum[v] = lowlink[v] = cnt++;
+  s.push(v);
+  for (auto vv : Graph[v])
+    if (!dfsnum[vv])
+    {
+      tarjan(vv, v);
+      lowlink[v] = min(lowlink[v], lowlink[vv]);
+    }
+    else if (vv != par)
+      lowlink[v] = min(lowlink[v], dfsnum[vv]);
+  if (dfsnum[v] == lowlink[v])
+  {
+    int currkey = keyy++;
+    while (true)
+    {
+      int tp = s.top();
+      s.pop();
+      key[tp] = currkey; // assigning a unique key to all nodes in every SCC
+      if (tp == v)
+        break;
+    }
+  }
+}
+
+void dfs1(int v) // creating the new Graph that has no cycles
+{
+  visited[v] = true;
+  for (auto vv : Graph[v])
+    if (!visited[vv])
+    {
+      {
+        if (key[v] != key[vv]) // adding the current edge into the new graph if it's not contained in a SCC
+        {
+          nGraph[key[v]].push_back(key[vv]);
+          nGraph[key[vv]].push_back(key[v]);
+        }
+        dfs1(vv);
+      }
+    }
+}
+
+void pre()
+{
+  Graph.clear(), nGraph.clear(), dfsnum.clear(), lowlink.clear(), key.clear();
+  cnt = 1, keyy = 0;
+  while (!s.empty())
+    s.pop();
+}
+
+int main()
+{
+  ios_base::sync_with_stdio(false);
+  cin.tie(0);
+  cout.tie(0);
+
+  int t;
+  cin >> t;
+  while (t--)
+  {
+    int n, m, u, v;
+    cin >> n >> m;
+    pre();
+    Graph.resize(n + 5), dfsnum.resize(n + 5), lowlink.resize(n + 5), key.resize(n + 5);
+    for (int i = 0; i < m; ++i)
+    {
+      cin >> u >> v;
+      --u, --v;
+      Graph[u].push_back(v);
+      Graph[v].push_back(u);
+    }
+    tarjan(0, -1);
+    int newN = keyy; // number of nodes in the new Graph
+    nGraph.resize(newN + 5);
+    visited.clear(), visited.resize(n + 5);
+    dfs1(0);
+    // done !! .. nGraph is the new graph that has no cycles :)
+  }
+}
