@@ -1,0 +1,47 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+#define fn(x) return cout << x << endl, 0
+#define prs(x) cout << x << " "
+#define prl(x) cout << x << endl
+#define pr(x) cout << x
+#define pi 3.14159265358979323846264338327950
+
+typedef long long ll;
+ll MOD = (ll)1000000007;
+
+ll gcd(ll a, ll b)
+{
+  return (!b ? a : gcd(b, a % b));
+}
+
+ll pow(ll a, ll k, ll m)
+{
+  if (!k)
+    return 1;
+  ll res = pow(a, k >> 1, m);
+  res = (res * res) % m;
+  if (k & 1)
+    res = (res * a) % m;
+  return res % m;
+}
+
+ll modMulInv(ll a, ll m)
+{
+  return pow(a, m - 2, m);
+}
+
+int main()
+{
+  ios_base::sync_with_stdio(false);
+  cin.tie(0);
+  cout.tie(0);
+				// making an n-necklace from k colors - counting a combination without its shifts.
+  int t, n, k, cnt = 1;
+  cin >> n >> k;
+  ll tot = 0;
+  for (int i = 1; i <= n; ++i) // counting the number of combinations unchanged on making i shifts. // gcd(i,n) colors will be repeated
+    tot += pow(k, gcd(i, n), MOD), tot %= MOD;
+  cout << (tot * modMulInv(n, MOD)) % MOD;
+ 
+}
