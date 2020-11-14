@@ -1,0 +1,23 @@
+deque<int> NumberInBase(int x, int base){
+        deque<int> rep;
+        while(x){
+            rep.push_front(x%base);
+            x/=base;
+        }
+        return rep;
+}
+auto main() -> int
+{
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);
+    cout.tie(0);
+
+    deque<int> repesentation = NumberInBase(21,2);
+    for(auto a : repesentation)
+        cout << a;
+### output .. -> 10101
+ 
+deque<int> repesentation = NumberInBase(21,5);
+    for(auto a : repesentation)
+        cout << a;
+### output .. -> 41
