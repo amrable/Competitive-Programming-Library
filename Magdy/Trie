@@ -1,0 +1,56 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+class TrieNode{
+        public:
+            map<char,TrieNode*> children;
+            map<char,int> numberOfChildren;
+            bool endOfWord;
+    };
+class Trie {
+    private:
+    TrieNode* root;
+public:
+    Trie() {
+        root = new TrieNode();
+        root->endOfWord=false;
+    }
+    //insert a word in the Trie
+    void insert(string word) {
+    bool in=false;
+    TrieNode* TempTrieNodePtr = root;
+    for(int i=0 ; i<word.size() ; ++TempTrieNodePtr->numberOfChildren[word[i]],TempTrieNodePtr = TempTrieNodePtr->children[word[i]],++i)
+        if(!TempTrieNodePtr->children[word[i]])
+        {
+            in=true;
+            TempTrieNodePtr->children[word[i]] = new TrieNode();
+            TempTrieNodePtr->children[word[i]]->endOfWord = (i==word.size()-1);
+        }
+    if(!in)
+        TempTrieNodePtr->endOfWord=true;
+    }
+    //returns true if a word exists in the Trie
+    bool search(string word) {
+         TrieNode* TempTrieNodePtr = root;
+    int i=0;
+    while(i<word.size() && TempTrieNodePtr->children[word[i]])
+        TempTrieNodePtr=TempTrieNodePtr->children[word[i]],++i;
+    return (i==word.size() && TempTrieNodePtr->endOfWord);
+    }
+    //returns number of strings which have the given prefix if any exists
+    bool startsWith(string prefix) {
+         TrieNode* TempTrieNodePtr = root;
+    int i=0;
+    while(i<prefix.size()-1 && TempTrieNodePtr->children[prefix[i]])
+        TempTrieNodePtr=TempTrieNodePtr->children[prefix[i]],++i;
+    return (TempTrieNodePtr->children[prefix[i]]? TempTrieNodePtr->numberOfChildren[prefix[i]] : 0);
+    }
+};
+
+int main(){
+    Trie* obj = new Trie();
+    obj->insert("ahmed");
+    obj->insert("ahmedden");
+    cout << obj->search("ahmedden");
+    return 0;
+}
